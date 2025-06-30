@@ -119,11 +119,10 @@ class Personagem:
             return self.escolherAcao(alvos)
 
 class Efeito:
-    def __init__(self, nome, duracao, alvo, ativo=False):
+    def __init__(self, nome, duracao, alvo):
         self.nome = nome
         self.duracao = duracao
         self.alvo = alvo
-        self.ativo = ativo
 
 # Molda outras classes, facilitando a utilização de funções em comum. 
 class Acao:
@@ -140,29 +139,29 @@ class Acao:
         # remove o usuário da lista de alvos possíveis
         if self.alvo_usuario:
             self.alvo = self.usuario
-        else: 
-            alvos.remove(self.usuario)
-        
-        if len(alvos) == 1:
-            self.alvo = alvos[0]
             return None
         else:
-            for indice, alvo in enumerate(alvos):
-                print(f"{indice}){alvo.nome}")
-            
-            indice_alvo = input("selecione o alvo da sua ação: ")
-            if indice_alvo.isnumeric():
-                if indice_alvo < len(alvos):
-                    self.alvo = alvos[indice_alvo]
-                    return None
-                else:
-                    print("ERRO: opção inválida!")
+            alvos.remove(self.usuario)
+            if len(alvos) == 1:
+                self.alvo = alvos[0]
+                return None
             else:
-                print("ERRO: opção inválida! O valor inserido necessita ser um número!")
+                for indice, alvo in enumerate(alvos):
+                    print(f"{indice}){alvo.nome}")
+                
+                indice_alvo = input("selecione o alvo da sua ação: ")
+                if indice_alvo.isnumeric():
+                    if indice_alvo < len(alvos):
+                        self.alvo = alvos[indice_alvo]
+                        return None
+                    else:
+                        print("ERRO: opção inválida!")
+                else:
+                    print("ERRO: opção inválida! O valor inserido necessita ser um número!")
 
-            # repete a função caso ocorra algum erro. A função só encerra o looping caso o usuário tenha selecionado um alvo válido.
-            limparTela()
-            return self.definirAlvo(lista_alvos)
+                # repete a função caso ocorra algum erro. A função só encerra o looping caso o usuário tenha selecionado um alvo válido.
+                limparTela()
+                return self.definirAlvo(lista_alvos)
 
 class Feitico(Acao):
     def __init__(self, nome, dano, precisao, consumo, chanceAlterarStatus, statusAlterado=None, duracaoStatus=None, alvo_usuario=False):
@@ -230,14 +229,25 @@ class Batalha:
             self.acoes.append(personagem.escolherAcao(alvos=self.personagens))
             limparTela()
 
+    def exibirLinha(self):
+        print("-" * 45)
+
+    def exibirTitulo(self, titulo):
+        posicao_inicial = int(45/2)
+        posicao_inicial = posicao_inicial - int(len(titulo) / 2)
+        self.exibirLinha()
+        print(" " * int(posicao_inicial - 1), titulo)
+        self.exibirLinha()
+
     def executarAcoes(self):
+        self.exibirTitulo("executando ações")
         for acao in self.acoes:
             if acao.nome == "nenhuma":
                 print(acao.usuario.nome)
-                print("-" * 45)
+                self.exibirLinha()
             else:
                 print(f"{acao.usuario.nome}")
-                print("-" * 45)
+                self.exibirLinha()
                 if acao.usuario.vida > 0:
                     if not "imobilizado" in acao.usuario.status:
                         if acao.alvo.vida > 0:
@@ -305,11 +315,10 @@ class Batalha:
                     else:
                         print(f"{acao.usuario.nome} está imobilizado!")
 
-                        print("-" * 45)
+                self.exibirLinha()
         self.acoes.clear()
     
     def aplicarEfeitos(self):
-        print("Aplicação de efeitos")
         for efeito in self.efeitos:
             match efeito.nome:
                 case "queimando":
@@ -324,14 +333,14 @@ class Batalha:
             efeito.duracao -= 1 
             if efeito.duracao == 0:
                 self.efeitos.remove(efeito)
-        print("-" * 45)
 
     def analisarStatus(self):
+        self.exibirTitulo("Aplicação de efeitos")
         for personagem in self.personagens:
             personagem.analisarStatus()
 
     def exibirInformacoes(self):
-        print("fim de turno")
+        self.exibirTitulo("fim de turno")
         for personagem in self.personagens:
             print(f"nome: {personagem.nome}    vida:  {personagem.vida}")
 
@@ -366,6 +375,7 @@ class Main:
     def escolhaPersonagem(self, modo="automatico"):
         """É responsável por permitir que o usuário escolha os movimentos e feitiços"""
         # gojo
+        mugen = Feitico(nome="mugen", dano=0, precisao=100, consumo=8, chanceAlterarStatus=100, statusAlterado="mugen", duracaoStatus=[1, 1], alvo_usuario=True)
         azul = Feitico(nome="azul", dano=15, precisao=100, consumo=15, chanceAlterarStatus=100, statusAlterado="imobilizado", duracaoStatus=[1, 3])
         vermelho = Feitico(nome="vermelho", dano=25, precisao=100, consumo=35, chanceAlterarStatus=0)
         vazio_roxo = Feitico(nome="vazio roxo", dano=70, precisao=100, consumo=60, chanceAlterarStatus=0)
@@ -382,7 +392,7 @@ class Main:
 
         # personagens disponíveis
         personagens = []
-        personagens.append(Personagem(nome="Satoru Gojo", vida=100, defesa=0, ataque=10, agilidade=100, energia=100, movimentos=[soco, chute], feiticos=[azul, vermelho, vazio_roxo], expansao=muriokusho))
+        personagens.append(Personagem(nome="Satoru Gojo", vida=100, defesa=0, ataque=10, agilidade=100, energia=100, movimentos=[soco, chute], feiticos=[mugen, azul, vermelho, vazio_roxo], expansao=muriokusho))
         personagens.append(Personagem(nome="Ryomen Sukuna", vida=100, defesa=0, ataque=10, agilidade=90, energia=100, movimentos=[soco, chute], feiticos=[clivar, desmantelar, flecha_fogo], expansao=santuario))
         
         if modo == "automatico":
