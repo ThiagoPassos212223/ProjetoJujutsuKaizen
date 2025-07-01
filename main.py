@@ -2,8 +2,25 @@ import os # responsável por interagir com o sistema
 from sys import platform, exit # responsável por identificar o OS e fechar o programa quando necessário.
 from random import randint # responsável por gerar números pseudoaleatórios
 
+# função responsável por identificar o sistema e com isso, utilizar o comando para limpar a tela
+def limparTela(esperar=True):
+    comando = "cls" if "win" in platform else "clear"
+    if esperar:
+        input("pressione enter para continuar: ")
+    os.system(comando) 
+
+def exibirLinha():
+    print("-" * 45)
+
+def exibirTitulo(titulo):
+    posicao_inicial = int(45/2)
+    posicao_inicial = posicao_inicial - int(len(titulo) / 2)
+    exibirLinha()
+    print(" " * int(posicao_inicial - 1), titulo)
+    exibirLinha()
+
 class Personagem:
-    def __init__(self, nome, vida, defesa, ataque, agilidade, energia, movimentos, feiticos, expansao):
+    def __init__(self, nome, vida, defesa, ataque, agilidade, energia, movimentos, feiticos, expansao=None, energia_reversa=False):
         self.nome = nome
         self.vida = vida
         self.defesa = defesa
@@ -14,109 +31,107 @@ class Personagem:
         self.feiticos = feiticos
         self.movimentos = movimentos
         self.expansao = expansao
+
+        self.energia_reversa = energia_reversa
+        self.regeneracao = Regeneracao(nome, 30, self)
         # condições da batalha
         self.precisao = 100
         self.status = []
 
-
     def analisarStatus(self):
+        if self.regeneracao.ativa:
+            self.regeneracao.executar()
+
+        joga = True
         print(f"status: ({self.nome})")
         for status in self.status:
-            match status:
+            efeito_status, duracao = status[0], status[1]
+            match efeito_status:
                 case "queimando":
                     print(f"{self.nome} está queimando! recebeu {5} de dano.")
-                    status.alvo.vida -= 5
+                    self.vida -= 5
                 case "sangrando":
                     print(f"{self.nome} está sangrando! recebeu {self.vida * 0.1} de dano.")
                     self.vida -= self.vida * 0.1
                 case "imobilizado":
                     print(f"{self.nome} está imobilizado! Não é possível realizar sua ação.") 
-                case "mugen":
-                    print(f"está ativado!")
+                    joga = False
+                case "atordoado":
+                    print(f"{self.nome} está atordoado! Não poderá realizar sua ação.")
+                    joga = False
                 case _:
-                    print(f"ERRO! Um status não cadastrado foi detectado! {self.nome}")
-        print("-" * 45)
-        self.status.clear()
+                    print(f"ERRO! Um status não cadastrado foi detectado! {efeito_status}")
+            
+            if duracao - 1 == 0:
+                self.status.remove(status)
+            else: 
+                status[1] -= 1
 
+        exibirLinha()
+        return joga
+    
     def definirModo(self, modo="ia"):
         self.modo = "ia" if modo == "ia" else "jogador"
 
     def escolherAcao(self, alvos):
+        limparTela()
         if self.modo == "ia":
             print("oi")    
         else:
             print(f"seleção de movimentos: ({self.nome})")
             print(f"vida: {self.vida}   energia: {self.energia}")
-            print("a)escolher movimento  b)escolher feitiço   c)expandir domínio")
+            print("a)escolher movimento  b)escolher feitiço   c)expandir domínio", end="   ")
+            
+            if self.energia_reversa:
+                print(f"d)usar energia reversa")
+            else:
+                print("")
+
             escolha = input("selecione uma das opções: ")
 
-            match escolha:
-                case "a":
-                    tipo_acao = "movimento"
-                case "b":
-                    tipo_acao = "feitico"
-                case "c":
-                    tipo_acao = "expansao"
-                case _:
-                    tipo_acao = None
 
-            if tipo_acao != None:
-                match tipo_acao:
-                    case "movimento":
-                        acoes = self.movimentos
-                    case "feitico":
-                        acoes = self.feiticos
-                    case "expansao":
-                        acoes = self.expansao
-                    case _:
-                        acoes = None
-                        print("erro!")
+            # verifica a seleção do usuário e com isso, carrega a lista de opções correta. 
+            dicionario_opcoes = {"a": self.movimentos, "b": self.feiticos, "c": self.expansao, "d": self.regeneracao}
 
-                for indice, acao in enumerate(acoes):
-                    print(f"{indice}){acao.nome}")
-                
-                escolha = input("selecione uma das opções: ")
-                if escolha.isnumeric():
-                    escolha = int(escolha)
-                    if escolha < len(acoes):
+            try:
+                acoes = dicionario_opcoes[escolha]
+            except KeyError:
+                print("opção inválida! Selecione uma opção válida!")
+                return self.escolherAcao(alvos)
+
+            if type(acoes) == list:
+                if len(acoes) > 1:
+                    for indice, acao in enumerate(acoes):
+                        print(f"{indice}){acao.nome}")    
+                    try:
+                        escolha = int(input("selecione uma das opções: "))
                         acao_escolhida = acoes[escolha]
-                        
-                        print(f"{acao_escolhida.nome}")
-                        if type(acao_escolhida) == Expansao:
-                            print(f"consumo: {acao_escolhida.consumo}")
-                        else:
-                            if acao_escolhida.dano > 0:
-                                print(f"dano: {acao_escolhida.dano}")
-                            print(f"precisão: {acao_escolhida.precisao}")
-                            
-                            if acao_escolhida.chanceAlterarStatus > 0:
-                                print(f"chance de alterar status: {acao_escolhida.chanceAlterarStatus}")
-                                print(f"status alterado: {acao_escolhida.statusAlterado}")
-                                print(f"duracaoStatus: {acao_escolhida.duracaoStatus}")
-
-                            if type(acao_escolhida) == Movimento:
-                                print(f"pp: {acao_escolhida.pp}")
-                            elif type(acao_escolhida) == Feitico:
-                                print(f"consumo: {acao_escolhida.consumo}")      
-                        escolha = input("a)confirmar escolha    b)cancelar\n")
-                        if "b" in escolha:
-                            pass
-                        else:
-                            if type(acao_escolhida) == Movimento or type(acao_escolhida) == Feitico:
-                                acao_escolhida.definirUsuario(self)
-                                acao_escolhida.definirAlvo(alvos)
-                            else:
-                                acao_escolhida.definirUsuario(self)
-                            
-                            print("-" * 45)
-                            return acao_escolhida
-                    else:
-                        print("ERRO: escolha inválida!")
+                    except ValueError:
+                        print("Erro: o tipo esperado é um valor númerico inteiro positivo! Tente novamente!")
+                        return self.escolherAcao(alvos)
+                    except IndexError:
+                        print("Erro: opção inválida, selecione uma das opções disponíveis!")
+                        return self.escolherAcao(alvos)    
                 else:
-                    print("ERRO: O valor inserido não é inteiro!")
-                        
-            limparTela()
-            return self.escolherAcao(alvos)
+                    acao_escolhida = acoes[0]
+            elif type(acoes) == Regeneracao or type(acoes) == Expansao:
+                acao_escolhida = acoes
+
+            # exibe informações sobre o movimento, feitiço ou expansão escolhida
+            exibirLinha()
+            print("informações adicionais")
+            acao_escolhida.exibirInformacoes()
+
+            escolha = input("a)confirmar escolha    b)cancelar\n")
+            if "b" in escolha:
+                return self.escolherAcao(alvos)
+            else:
+                if type(acao_escolhida) == Movimento or type(acao_escolhida) == Feitico:
+                    acao_escolhida.definirUsuario(self)
+                    acao_escolhida.definirAlvo(alvos)
+                else:
+                    acao_escolhida.definirUsuario(self)
+                return acao_escolhida
 
 class Efeito:
     def __init__(self, nome, duracao, alvo):
@@ -134,8 +149,10 @@ class Acao:
         self.usuario = usuario
 
     def definirAlvo(self, lista_alvos):
+        # limpando a tela
+        limparTela(esperar=False)
+        
         alvos = lista_alvos.copy()
-
         # remove o usuário da lista de alvos possíveis
         if self.alvo_usuario:
             self.alvo = self.usuario
@@ -148,20 +165,25 @@ class Acao:
             else:
                 for indice, alvo in enumerate(alvos):
                     print(f"{indice}){alvo.nome}")
-                
-                indice_alvo = input("selecione o alvo da sua ação: ")
-                if indice_alvo.isnumeric():
-                    if indice_alvo < len(alvos):
-                        self.alvo = alvos[indice_alvo]
-                        return None
-                    else:
-                        print("ERRO: opção inválida!")
-                else:
-                    print("ERRO: opção inválida! O valor inserido necessita ser um número!")
+                try:
+                    indice_alvo = int(input("selecione o alvo da sua ação: "))
+                    self.alvo = alvos[indice_alvo]
+                    return None     
+                except ValueError:
+                    print(f"ERRO: o tipo esperado é um valor númerico inteiro positivo! Tente novamente!")
+                except IndexError:
+                    print("ERRO: opção inválida! Selecione uma das opções disponíveis!")
 
-                # repete a função caso ocorra algum erro. A função só encerra o looping caso o usuário tenha selecionado um alvo válido.
-                limparTela()
-                return self.definirAlvo(lista_alvos)
+        # repete a função caso ocorra algum erro. A função só encerra o looping caso o usuário tenha selecionado um alvo válido.
+        return self.definirAlvo(lista_alvos)
+
+    def exibirInformacoes(self):
+        dicionario_atributos = self.__dict__.items()
+        for chave, valor in dicionario_atributos:
+            if chave == "alvo_usuario" or valor == None or valor == 0:
+                pass
+            else: 
+                print(f"{chave}: {valor}")
 
 class Feitico(Acao):
     def __init__(self, nome, dano, precisao, consumo, chanceAlterarStatus, statusAlterado=None, duracaoStatus=None, alvo_usuario=False):
@@ -172,6 +194,44 @@ class Feitico(Acao):
         self.chanceAlterarStatus = chanceAlterarStatus
         self.statusAlterado = statusAlterado
         self.duracaoStatus = duracaoStatus
+
+    def consumir(self):
+        # reduz a energia do usuário do feitiço
+        if self.usuario.energia - self.consumo > 0:
+            self.usuario.energia -= self.consumo
+            return True
+        else:
+            return False
+
+    def executar(self):
+        if self.usuario.analisarStatus() and self.usuario.vida > 0:
+            if self.consumir():
+                print(f"{self.usuario.nome} utilizou {self.nome}")
+                if (self.usuario.precisao + self.precisao) / 2 >= randint(1, 100):
+                    print(f"atingiu {self.alvo.nome}")
+                    dano = self.dano 
+                    defesa = self.alvo.defesa
+
+                    if dano > defesa:
+                        print(f"causou {dano - defesa} de dano")
+                        self.alvo.vida -= dano - defesa 
+                    else:
+                        print("o movimento foi ineficaz. Causou apenas 1 de dano")
+                        self.alvo.vida -= 1 
+
+                    if self.chanceAlterarStatus >= randint(1, 100):
+                        print(f"alterou o status de {self.alvo.nome} para {self.statusAlterado}")
+                        duracao_efeito = randint(self.duracaoStatus[0], self.duracaoStatus[1])
+                        if self.statusAlterado not in self.alvo.status:
+                            self.alvo.status.append([self.statusAlterado, duracao_efeito])
+                else:
+                    print("Não conseguiu acertar o feitiço!")
+            else:
+                print("energia insuficiente para utilizar feitiço")
+        exibirLinha()
+
+        self.alvo = None
+        self.usuario = None
     
 class Movimento(Acao):
     def __init__(self, nome, dano, precisao, pp, chanceAlterarStatus, statusAlterado=None, duracaoStatus=None, alvo_usuario=False):
@@ -183,18 +243,126 @@ class Movimento(Acao):
         self.statusAlterado = statusAlterado
         self.duracaoStatus = duracaoStatus
 
+    def consumir(self):
+        # reduz a energia do usuário do feitiço
+        if self.pp - 1 >= 0:
+            self.pp -= 1
+            return True
+        else:
+            return False
+
+    def executar(self):
+        if self.usuario.analisarStatus() and self.usuario.vida > 0:
+            if self.consumir():
+                print(f"{self.usuario.nome} utilizou {self.nome}")
+                if (self.usuario.precisao + self.precisao) / 2 >= randint(1, 100):
+                    print(f"atingiu {self.alvo.nome}")
+                    dano = self.dano 
+                    defesa = self.alvo.defesa
+
+                    if dano > defesa:
+                        print(f"causou {dano - defesa} de dano")
+                        self.alvo.vida -= dano - defesa 
+                    else:
+                        print("o movimento foi ineficaz. Causou apenas 1 de dano")
+                        self.alvo.vida -= 1 
+
+                    if self.chanceAlterarStatus >= randint(1, 100):
+                        print(f"alterou o status de {self.alvo.nome} para {self.statusAlterado}")
+                        duracao_efeito = randint(self.duracaoStatus[0], self.duracaoStatus[1])
+                        if self.statusAlterado not in self.alvo.status:
+                            self.alvo.status.append([self.statusAlterado, duracao_efeito])
+                else:
+                    print("Não conseguiu acertar o movimento!")
+            else:
+                print("pp insuficiente para utilizar o movimento")
+        exibirLinha()
+
+        self.alvo = None
+        self.usuario = None
+
 class Expansao(Acao):
     def __init__(self, nome, consumo, alvo_usuario=False):
         Acao.__init__(self, nome, alvo_usuario)
-        self.nome = nome
         self.consumo = consumo
+        self.ativa = False
 
+    def consumir(self):
+        # reduz a energia do usuário do feitiço
+        if self.usuario.energia - self.consumo > 0:
+            print(f"{self.nome} está ativa! {self.usuario.nome} utilizou {self.consumo} para manter o domínio ativado!")
+            self.usuario.energia -= self.consumo
+            return True
+        else:
+            print(f"{self.nome} está desativada! {self.usuario.nome} não têm energia suficiente para manter o domínio ativado!")
+            return False
 
-# função responsável por identificar o sistema e com isso, utilizar o comando para limpar a tela
-def limparTela():
-    comando = "cls" if "win" in platform else "clear"
-    input("pressione enter para continuar: ")
-    os.system(comando) 
+    def ativar(self):
+        if self.ativa:
+            self.ativa = False
+            print(f"{self.usuario.nome} desativou a expansao de domínio {self.nome}!")
+        else:
+            print(f"{self.usuario.nome} ativou a expansão de domínio {self.nome}!")    
+            self.ativa = True
+
+    def definirAlvos(self, alvos):
+        self.alvo = alvos.copy()
+        self.alvo.remove(self.usuario)
+
+    def executar(self):
+        if self.ativa:
+            if self.consumir():
+                print(f"{self.nome} está ativa")
+                for alvo in self.alvo:
+                    if self.nome == "muriokusho":
+                        if "imobilizado" not in alvo.status:
+                            alvo.status.append(["imobilizado", 1])
+                            print(f"{self.alvo.nome} está imobilizado!")
+
+                    elif self.nome == "santuario":
+                        alvo.vida -= 25
+                        print(f"{alvo.nome} foi atingido pelos cortes do santuário. Recebeu 25 de dano.")
+            else:
+                print(f"{self.nome} está desativada!")
+                self.ativa = False
+
+        exibirLinha()
+
+    
+
+class Regeneracao(Acao):
+    def __init__(self, nome, consumo, alvo_usuario=True):
+        Acao.__init__(self, nome, alvo_usuario)
+        self.consumo = consumo
+        self.ativa = False
+
+    def consumir(self):
+        # reduz a energia do usuário do feitiço
+        if self.usuario.energia - self.consumo > 0:
+            self.usuario.energia -= self.consumo
+            return True
+        else:
+            return False
+
+    def ativar(self):
+        if self.ativa:
+            self.ativa = False
+            print(f"{self.usuario.nome} desativou a regeneração!")
+        else:
+            print(f"{self.usuario.nome} ativou a regeneração!")    
+            self.ativa = True
+
+    def executar(self):
+        if self.ativa:
+            if self.consumir():
+                print(f"{self.usuario.nome} utilizou energia reversa para se regenerar!")
+                vida_recuperada = self.usuario.vida * 0.15
+                self.usuario.vida += vida_recuperada
+                print(f"recuperou {vida_recuperada}")
+            else:
+                print("energia insuficiente para se regenerar. regeneração está desativada!")
+                self.ativa = False
+        exibirLinha()
 
 # responsável por batalhas e funções relacionadas.
 class Batalha:
@@ -204,12 +372,15 @@ class Batalha:
         self.efeitos = []
         self.expansoes = []
 
+        for personagem in self.personagens:
+            if personagem.expansao != None:
+                self.expansoes.append(personagem.expansao)
+
     def looping(self):
         while True:
             self.escolherAcoes()
             self.executarAcoes()
-            self.aplicarEfeitos()
-            self.analisarStatus()
+            self.aplicarEfeitoExpansoes()
             self.exibirInformacoes()
 
 
@@ -218,7 +389,6 @@ class Batalha:
                 print(f"{vencedor.nome} venceu!")
                 break
 
-            limparTela()
         limparTela()
 
     def escolherAcoes(self):
@@ -227,122 +397,47 @@ class Batalha:
 
         for personagem in self.personagens:
             self.acoes.append(personagem.escolherAcao(alvos=self.personagens))
-            limparTela()
-
-    def exibirLinha(self):
-        print("-" * 45)
-
-    def exibirTitulo(self, titulo):
-        posicao_inicial = int(45/2)
-        posicao_inicial = posicao_inicial - int(len(titulo) / 2)
-        self.exibirLinha()
-        print(" " * int(posicao_inicial - 1), titulo)
-        self.exibirLinha()
 
     def executarAcoes(self):
-        self.exibirTitulo("executando ações")
+        limparTela()
+        exibirTitulo("executando ações")
         for acao in self.acoes:
-            if acao.nome == "nenhuma":
-                print(acao.usuario.nome)
-                self.exibirLinha()
+            if type(acao) == Regeneracao or type(acao) == Expansao:
+                acao.ativar()
             else:
-                print(f"{acao.usuario.nome}")
-                self.exibirLinha()
-                if acao.usuario.vida > 0:
-                    if not "imobilizado" in acao.usuario.status:
-                        if acao.alvo.vida > 0:
-                            if not "mugen" in acao.alvo.status or acao.alvo.statusAlterado == "quebrar mugen":
-                                if type(acao) == Expansao: 
-                                    if not acao in self.expansoes:
-                                        if acao.usuario.energia - acao.consumo >= 0:
-                                            acao.usuario.energia -= acao.consumo
-                                        else:
-                                            print("energia insuficiente para expandir domínio")
-                                    else:
-                                        print("expansão de domínio desativada!")
-                                        self.expansoes.remove(acao)
+                acao.executar()
 
-                                
-                                elif type(acao) == Feitico:
-                                    if acao.usuario.energia - acao.consumo >= 0:
-                                        acao.usuario.energia -= acao.consumo
+        exibirLinha()
 
-                                        print(f"{acao.usuario.nome} utilizou {acao.nome}")
-                                        if (acao.precisao + acao.usuario.precisao)/2 >= randint(1, 100):
-                                            print(f"atingiu {acao.alvo.nome}")
-                                            dano = acao.dano 
-                                            defesa = acao.alvo.defesa
-
-                                            if dano > defesa:
-                                                print(f"causou {dano - defesa} de dano")
-                                                acao.alvo.vida -= dano - defesa 
-                                            else:
-                                                print("o movimento foi ineficaz. Causou apenas 1 de dano")
-                                                acao.alvo.vida -= 1 
-
-                                            if acao.chanceAlterarStatus >= randint(1, 100):
-                                                print(f"alterou o status de {acao.alvo.nome} para {acao.statusAlterado}")
-                                                duracao_efeito = randint(acao.duracaoStatus[0], acao.duracaoStatus[1])
-                                                efeito = Efeito(nome=acao.statusAlterado, duracao=duracao_efeito, alvo=acao.alvo)
-                                                self.efeitos.append(efeito)
-                                        else:
-                                            print("Não conseguiu acertar o feitiço!")
-                                    else:
-                                        print("energia insuficiente para utilizar feitiço")
-                                    
-                                elif type(acao) == Movimento:
-                                    if acao.pp  > 0:
-                                        acao.pp -= 1
-                                        print(f"{acao.usuario.nome} utilizou {acao.nome}")
-                                        if (acao.precisao + acao.usuario.precisao)/2 >= randint(1, 100):
-                                            print(f"atingiu {acao.alvo.nome}")
-                                            dano = acao.dano 
-                                            defesa = acao.alvo.defesa
-
-                                            if dano > defesa:
-                                                print(f"causou {dano - defesa} de dano")
-                                                acao.alvo.vida -= dano - defesa 
-                                            else:
-                                                print("o movimento foi ineficaz. Causou apenas 1 de dano")
-                                                acao.alvo.vida -= 1 
-                                        else:
-                                            print("Não conseguiu acertar o movimento!")
-                                    else:
-                                        print("pp insuficiente para utilizar o movimento")
-                                self.aplicarEfeitos()
-                            else:
-                                print(f"não foi possível atingir {acao.alvo.nome} pois o mugen está ativado!")
-                    else:
-                        print(f"{acao.usuario.nome} está imobilizado!")
-
-                self.exibirLinha()
         self.acoes.clear()
-    
-    def aplicarEfeitos(self):
-        for efeito in self.efeitos:
-            match efeito.nome:
-                case "queimando":
-                    efeito.alvo.status.append("queimando")
-                case "sangrando":
-                    efeito.alvo.status.append("sangrando")
-                case "imobilizado":
-                    efeito.alvo.status.append("imobilizado")
-                case _:
-                    print(f"ERRO! Um efeito não cadastrado foi detectado! {efeito.nome}")
-
-            efeito.duracao -= 1 
-            if efeito.duracao == 0:
-                self.efeitos.remove(efeito)
 
     def analisarStatus(self):
-        self.exibirTitulo("Aplicação de efeitos")
+        limparTela()
+
+        exibirTitulo("Aplicação de efeitos de status")
         for personagem in self.personagens:
             personagem.analisarStatus()
+        
+        exibirLinha()
 
     def exibirInformacoes(self):
-        self.exibirTitulo("fim de turno")
+        limparTela()
+
+        exibirTitulo("fim de turno")
         for personagem in self.personagens:
             print(f"nome: {personagem.nome}    vida:  {personagem.vida}")
+
+        exibirLinha()
+
+
+    def aplicarEfeitoExpansoes(self):
+        for expansao in self.expansoes:
+            try:
+                expansao.definirAlvos(self.personagens)
+                if expansao.ativa:
+                    expansao.executar()
+            except AttributeError: 
+                pass
 
     def verificarVencedor(self):
         for personagem in self.personagens:
@@ -358,70 +453,70 @@ class Batalha:
 class Main:
     def __init__(self):
         # looping principal, menu inicial.
-        while True:
-            print("bem vindo!")
-            print("modos de jogo: ")
-            print("a)jogador vs jogador     b)jogador vs computador   c)sair")
-            modo = input("selecione o modo de jogo: ")
+        print("bem vindo!")
+        print("modos de jogo: ")
+        print("a)jogador vs jogador     b)jogador vs computador   c)sair")
+        modo = input("selecione o modo de jogo: ")
 
-            limparTela()
-            if "a" in modo:
-                self.jogadorVsJogador() # redireciona o jogador para o modo jogador VS jogador
-            elif "b" in modo:
-                self.jogadorVsComputador() # redireciona o jogador para o modo jogador VS computador
-            else:
-                exit() # fecha o programa
+        if "a" in modo:
+            self.jogadorVsJogador() # redireciona o jogador para o modo jogador VS jogador
+        elif "b" in modo:
+            self.jogadorVsComputador() # redireciona o jogador para o modo jogador VS computador
+        else:
+            exit() # fecha o programa
 
-    def escolhaPersonagem(self, modo="automatico"):
+    def escolherPersonagem(self, modo="automatico"):
         """É responsável por permitir que o usuário escolha os movimentos e feitiços"""
         # gojo
         mugen = Feitico(nome="mugen", dano=0, precisao=100, consumo=8, chanceAlterarStatus=100, statusAlterado="mugen", duracaoStatus=[1, 1], alvo_usuario=True)
-        azul = Feitico(nome="azul", dano=15, precisao=100, consumo=15, chanceAlterarStatus=100, statusAlterado="imobilizado", duracaoStatus=[1, 3])
+        azul = Feitico(nome="azul", dano=15, precisao=100, consumo=15, chanceAlterarStatus=100, statusAlterado="imobilizado", duracaoStatus=[1, 2])
         vermelho = Feitico(nome="vermelho", dano=25, precisao=100, consumo=35, chanceAlterarStatus=0)
         vazio_roxo = Feitico(nome="vazio roxo", dano=70, precisao=100, consumo=60, chanceAlterarStatus=0)
         # sukuna
         clivar = Feitico(nome="clivar", dano=20, precisao=100, consumo=25, chanceAlterarStatus=50, statusAlterado="sangrando", duracaoStatus=[1, 3])
         desmantelar = Feitico(nome="desmantelar", dano=75, precisao=100, consumo=80, chanceAlterarStatus=0)
         flecha_fogo = Feitico(nome="flecha de fogo", dano=50, precisao=100, consumo=65, chanceAlterarStatus=60, statusAlterado="queimando", duracaoStatus=[2, 4])
+        # yuta
+        golpe_com_espada = Movimento(nome="golpe com espada", dano=12, precisao=100, pp=7, chanceAlterarStatus=50, statusAlterado="sangrando", duracaoStatus=[1, 3])
         # golpes
-        soco = Movimento(nome="soco simples", dano=6, precisao=100, pp=25, chanceAlterarStatus=100, statusAlterado="atordoado", duracaoStatus=[2, 4])
-        chute = Movimento(nome="Chute tranversal", dano=8, precisao=100, pp=15, chanceAlterarStatus=0)
+        soco = Movimento(nome="soco simples", dano=6, precisao=100, pp=25, chanceAlterarStatus=0)
+        chute = Movimento(nome="Chute tranversal", dano=8, precisao=100, pp=15, chanceAlterarStatus=100, statusAlterado="atordoado", duracaoStatus=[1, 2])
         # expansão
         muriokusho = Expansao(nome="muriokusho", consumo=35)
         santuario = Expansao(nome="santuario", consumo=40)
 
         # personagens disponíveis
         personagens = []
-        personagens.append(Personagem(nome="Satoru Gojo", vida=100, defesa=0, ataque=10, agilidade=100, energia=100, movimentos=[soco, chute], feiticos=[mugen, azul, vermelho, vazio_roxo], expansao=muriokusho))
-        personagens.append(Personagem(nome="Ryomen Sukuna", vida=100, defesa=0, ataque=10, agilidade=90, energia=100, movimentos=[soco, chute], feiticos=[clivar, desmantelar, flecha_fogo], expansao=santuario))
+        personagens.append(Personagem(nome="Satoru Gojo", vida=100, defesa=0, ataque=10, agilidade=100, energia=100, movimentos=[soco, chute], feiticos=[mugen, azul, vermelho, vazio_roxo], expansao=muriokusho, energia_reversa=True))
+        personagens.append(Personagem(nome="Ryomen Sukuna", vida=100, defesa=0, ataque=10, agilidade=90, energia=100, movimentos=[soco, chute], feiticos=[clivar, desmantelar, flecha_fogo], expansao=santuario, energia_reversa=True))
         
+
+        limparTela()
         if modo == "automatico":
             ...
         else:
-            while True:
-                # looping responsável por exibir todos os personagens
-                for n, personagem in enumerate(personagens):
-                    print(f"{n}){personagem.nome}")
+            # looping responsável por exibir todos os personagens
+            for n, personagem in enumerate(personagens):
+                print(f"{n}){personagem.nome}")
 
-                escolha = input("escolha um dos personagens: ")
-                # validando escolha do usuário
-                if escolha.isnumeric(): 
-                    if int(escolha) < len(personagens):
-                        limparTela()
-                        personagem = personagens[int(escolha)]
-                        # os personagens são por padrão colocados como IA. 
-                        # Nesse caso, está definindo que o jogador é um humano.
-                        personagem.definirModo("manual")
-                        return personagem
-                    else:
-                        print("Erro: opção inválida!")
-                else:
-                    print("Erro: por favor, insira um valor númerico válido!")
-                limparTela()
-            
+            # validando escolha do usuário
+            try:
+                escolha = int(input("escolha um dos personagens: "))
+                personagem = personagens[escolha]
+                # os personagens são por padrão colocados como IA. 
+                # Nesse caso, está definindo que o jogador é um humano.
+                personagem.definirModo("manual")
+                return personagem
+            except ValueError:
+                print("Erro: opção inválida!")
+                return self.escolherPersonagem(modo)
+            except IndexError:
+                print("Erro: por favor, insira um valor númerico válido!")
+                return self.escolherPersonagem(modo)
+
     def jogadorVsJogador(self):
-        jogador1 = self.escolhaPersonagem("manual")
-        jogador2 = self.escolhaPersonagem("manual")
+        jogador1 = self.escolherPersonagem("manual")
+        jogador2 = self.escolherPersonagem("manual")
 
         batalha = Batalha([jogador1, jogador2])
         batalha.looping()
@@ -430,5 +525,3 @@ class Main:
         ...
 
 Main()
-
-        
