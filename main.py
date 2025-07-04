@@ -106,7 +106,7 @@ class Personagem:
         """responsável por permitir a escolha das ações do personagem"""
         limparTela()
         if self.modo == "ia":
-            print("oi")    
+            ...
         else:
             while True:
                 print(f"seleção de movimentos: ({self.nome})")
@@ -214,13 +214,11 @@ class Acao:
             if self.usuario.energia - self.consumo > 0:
                 return True
             else:
-                print("energia insuficiente para utilizar movimento!")
                 return False
         elif self.fonte == "pp":
             if self.consumo - 1 >= 0:
                 return True
             else:
-                print("pp insuficiente para realizar movimento")
                 return False
         else:
             print(f"ocorreu um erro! Fonte inválida para o movimento {self.nome}")
@@ -486,7 +484,11 @@ class Main:
 
         limparTela()
         if modo == "automatico":
-            ...
+            # sorteando um número aleatório para escolher o indíce da lista personagens. 
+            indice_sorteado = randint(0, len(personagens) - 1)
+            # escolhe o personagem no indice da lista personagens e armazena na variavel personagem 
+            personagem = personagens[indice_sorteado]
+            return personagem 
         else:
             lista_personagens = []
             # looping responsável por exibir todos os personagens
