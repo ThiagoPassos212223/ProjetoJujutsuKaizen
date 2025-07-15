@@ -1,0 +1,84 @@
+personagens 
+
+Personagens do jogo: Satoru Gojo, Ryomen Sukuna(Megumi), Ryomen Sukuna (heian), Yuta, Maki, Toji, Itadori, Higuruma, Hakari, 
+Mahito, Jogo, Hanami, Dragon, Choso, Megumi, Nobara.
+
+Satoru Gojo:
+# feitiços
+- mugen ativado. Adiciona o efeito de status, mugen ativado, quando o efeito está ativado, impede receber maioria
+dos golpes. Pode ser ultrapassado por efeitos de expansões de domínio e por golpes específicos como o desmantelar. 
+- azul. Adiciona o efeito de status do adversário para aprisionado. Com isso, seu adversário não poderá se mexer 
+por 1 a 3 turnos. 
+- vermelho. Causa dano ao seu adversário. pequena chance de alterar o status do adversário para atordoado.
+- roxo. Causa alto dano ao seu adversário. 
+- regeneração
+# golpes
+- soco do mais forte. Causa medio dano. 
+- esquiva. Aumenta a evasão por 1 turno.
+- você e fraco! Aumenta a força e poder do usuário por 2 turnos. Adiciona o efeito para si mesmo de o mais forte.
+- contra ataque. Consegue esquivar de golpes físicos e contra-atacar.
+# expansão de domínio
+expansão de domínio: muriokusho. 
+efeito da expansão: todos os individuos, exceto o usuário ficam imobilizados por 2 a 5 turnos.
+
+Ryomen Sukuna (megumi):
+# feitiços
+- clivar. Provoca pequenos cortes em seu adversário, pode alterar o status para sangrando.
+- desmantelar. causa alto dano ao adversário. Causa sangramento
+- Flecha de fogo. dano adaptativo, tem maior dano quando a expansão de domínio está ativa.
+- reencarnação. se torna o Sukuna era heian, alterando atributos e status, recuperando vida e energia.
+- invocação do Mahoraga. Traz o Mahoraga como aliado para a batalha.
+- invocação do Totalidade. Traz o Totalidade como aliado para a batalha.
+- invocação de coelhos (distração). Reduz a precisão do seu adversário.
+- invocação do cão divino. Traz o Totalidade como aliado para a batalha.
+- regeneração
+# golpes
+- soco. Causa baixo dano.
+- contra ataque.
+- ponha se no seu lugar, seu insolente. reduz a força e poder do seu adversário
+# expansão de domínio
+Santurio
+efeito da expansão: todos os individuos exceto o próprio usuário são afetados por cortes da expansão.
+
+Ryomen Sukuna (heian):
+# feitiços
+- clivar. Provoca pequenos cortes em seu adversário, pode alterar o status para sangrando.
+- desmantelar. causa alto dano ao adversário. Causa sangramento
+- Flecha de fogo. dano adaptativo, tem maior dano quando a expansão de domínio está ativa.
+- cesta oca de vime. Consegue evitar o efeito das expansões de domínio com 99% de eficacia
+- regeneração
+# golpes
+- soco do rei. Causa alto dano.
+- contra ataque.
+- ponha se no seu lugar, seu insolente. reduz a força e poder do seu adversário
+- eu sou o rei! Melhor não se esquecer! Dobra o dano do próximo feitiço.
+# expansão de domínio
+Santurio
+efeito da expansão: todos os individuos exceto o próprio usuário são afetados por cortes da expansão.
+
+Yuta:
+# feitiços
+- não se mova. Consegue imobilizar o adversário por 1 a 3 turnos.
+- Morra! Consegue causar alto dano, mas também recebe dano de volta. 
+- cópia. Consegue copiar um movimento do adversário e utiliza-lo na batalha.
+- regeneração
+- véu. Consegue evitar um ataque e obter vantágem.
+- desmantelar. Causa alto dano.
+- manifestação da Rika. Consegue energia infinita por 3 turnos.
+# golpes
+- corte com katana: causa alto dano, pode causar sangramento.
+- contra ataque: consegue evitar um ataque e contra-atacar.
+# expansão de domínio
+amor mutuo.
+efeito da expansão de domínio: consegue diversas técnicas aleatórias. Pode utiliza-la.
+
+Maki:
+# golpes:
+- dragon bone. Corte com uma poderosa lamina. Causa medio dano.
+- esquiva. Consegue utilizar sua grande agilidade para desviar dos ataques.
+- contra ataque. Consegue desviar e contra atacar
+- nuvem celestial. Causa alto dano.
+
+
+
+
