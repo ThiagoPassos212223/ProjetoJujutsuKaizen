@@ -85,7 +85,6 @@ class Acao:
             self.consumir()
             print(f"{self.usuario.nome} utilizou {self.nome}")
             if (self.usuario.precisao + self.precisao) / 2 >= sortearNumero(1, 100):
-                print(f"atingiu {self.alvo.nome}")
                 for funcao in self.funcoes:
                     funcao.executar(self.alvo)
             else:
@@ -103,8 +102,19 @@ class Dano:
 
     def executar(self, alvo):
         if self.acerto_garantido or self.precisao >= sortearNumero(1, 100):
-            print(f"causou {self.dano} de dano")
-            alvo.vida -= self.dano
+            for status_alvo in alvo.status:
+                if "mugen ativado" in status_alvo:
+                    mugen_ativado = True
+                    break
+            else:
+                mugen_ativado = False
+
+            if not(mugen_ativado):
+                print(f"atingiu {alvo.nome}")
+                print(f"causou {self.dano} de dano")
+                alvo.vida -= self.dano
+            else:
+                print(f"não conseguiu atingir {alvo.nome}, pois mugen está ativado!")
         else:
             print("não conseguiu atingir o alvo.")
 
@@ -117,16 +127,24 @@ class Efeito:
     
     def executar(self, alvo):
         if self.acerto_garantido or self.precisao >= sortearNumero(1, 100):
-            print(f"alterou o status de {alvo.nome} para {self.status}")
-
-            if len(self.duracao) > 1:
-                duracao_efeito = sortearNumero(self.duracao[0], self.duracao[1])
+            for status_alvo in alvo.status:
+                if "mugen ativado" in status_alvo:
+                    mugen_ativado = True
+                    break
             else:
-                duracao_efeito = self.duracao
+                mugen_ativado = False
 
-            if self.status not in alvo.status:
-                alvo.status.append([self.status, duracao_efeito])
-        
+            if not(mugen_ativado):
+                print(f"alterou o status de {alvo.nome} para {self.status}")
+                if type(self.duracao) == list:
+                    duracao_efeito = sortearNumero(self.duracao[0], self.duracao[1])
+                else:
+                    duracao_efeito = self.duracao
+                if self.status not in alvo.status:
+                    alvo.status.append([self.status, duracao_efeito])
+            else:
+                print("não é possível aplicar efeito, pois o mugen está ativado!")
+            
 class Expansao:
     def __init__(self, nome, consumo):
         self.tipo = "expansao"
@@ -196,30 +214,28 @@ class ConjuntoAcoes:
 
     def adicionarFeiticos(self, nome_personagem):
         # gojo
-        mugen = Acao(nome="mugen", precisao=100, fonte="energia", consumo=20)
-        mugen.adicionarFuncoes([Efeito(status="mugen ativado", duracao=[3, 4], precisao=100, acerto_garantido=True)])
-
+        mugen = Acao(nome="mugen", precisao=100, fonte="energia", consumo=35, alvo_usuario=True)
+        mugen.adicionarFuncoes([Efeito(status="mugen ativado", duracao=[1, 3], precisao=200, acerto_garantido=True)])
         azul = Acao(nome="azul", precisao=100, fonte="energia", consumo=15)
         azul.adicionarFuncoes([Efeito(status="imobilizado", duracao=[1, 3], precisao=100, acerto_garantido=True)])
-        
         vermelho = Acao(nome="vermelho", precisao=100, fonte="energia", consumo=35)
         vermelho.adicionarFuncoes([Dano(dano=35, precisao=100, acerto_garantido=True), Efeito("atordoado", [1, 2], precisao=30, acerto_garantido=False)])
-        
         vazio_roxo = Acao(nome="vazio roxo", precisao=100, fonte="energia", consumo=60)
         vazio_roxo.adicionarFuncoes([Dano(70, precisao=100, acerto_garantido=True)])
         # sukuna
         clivar = Acao(nome="clivar", precisao=100, fonte="energia", consumo=25)
         clivar.adicionarFuncoes([Dano(15, precisao=100, acerto_garantido=True), Efeito("sangrando", [1, 3], precisao=45, acerto_garantido=False)])
-
         desmantelar = Acao(nome="desmantelar", precisao=100, fonte="energia", consumo=80)
         desmantelar.adicionarFuncoes([Dano(50, precisao=100, acerto_garantido=True), Efeito("sangrando", [1, 3], precisao=100, acerto_garantido=False)])
-
         flecha_fogo = Acao(nome="flecha de fogo", precisao=100, fonte="energia", consumo=65)
         flecha_fogo.adicionarFuncoes([Dano(65, precisao=100, acerto_garantido=True), Efeito("queimando", [2, 4], precisao=55, acerto_garantido=False)])
+        # golpes comuns com energia reversa
+        regeneracao = Acao(nome="regeneração", fonte="energia", consumo=40, precisao=200, alvo_usuario=True)
+        regeneracao.adicionarFuncoes([Efeito("regeneração", 1, precisao=100, acerto_garantido=True)])
 
         self.feiticos = {
-            "Satoru Gojo": [mugen, azul, vermelho, vazio_roxo],
-            "Ryomen Sukuna": [clivar, desmantelar, flecha_fogo] 
+            "Satoru Gojo": [mugen, azul, vermelho, vazio_roxo, regeneracao],
+            "Ryomen Sukuna": [clivar, desmantelar, flecha_fogo, regeneracao] 
         }
         return self.feiticos[nome_personagem]
 

@@ -43,12 +43,16 @@ class Personagem:
                 case "atordoado":
                     print(f"{self.nome} está atordoado! Não poderá realizar sua ação.")
                     joga = False
+                case "mugen ativado":
+                    print(f"{self.nome} está com mugen ativado!")
+                case "regeneração":
+                    self.vida += 40
+                    print(f"{self.nome} está se regenerando utilizando energia reversa! Recuperou 40 de vida")
                 case _:
                     print(f"ERRO! Um status não cadastrado foi detectado! {efeito_status}")
             # verifica se a duração do efeito de status acabou, caso tenha, remove da lista de efeito de status
             if duracao - 1 == 0:
                 self.status.remove(status)
-            # reduz a duração do efeito de status
             else: 
                 status[1] -= 1
         exibirLinha()
@@ -97,9 +101,13 @@ class Personagem:
 
                 escolha = selecioneOpcao(lista_exibicao=["confirmar escolha", "cancelar"], lista_original=[True, False], mensagem="selecione uma das opções: ", escolha_obrigatoria=True)
                 if escolha:
-                    if acao_escolhida.tipo == "acao" and not(acao_escolhida.alvo_usuario):
-                        acao_escolhida.definirUsuario(self)
-                        acao_escolhida.definirAlvo(alvos)
+                    if acao_escolhida.tipo == "acao":
+                        if not(acao_escolhida.alvo_usuario):
+                            acao_escolhida.definirUsuario(self)
+                            acao_escolhida.definirAlvo(alvos)
+                        else:
+                            acao_escolhida.definirUsuario(self)
+                            acao_escolhida.definirAlvo(alvos)
                     else:
                         acao_escolhida.definirUsuario(self)
 

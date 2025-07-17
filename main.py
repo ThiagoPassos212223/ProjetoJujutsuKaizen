@@ -22,10 +22,8 @@ class Main:
 
     def escolherPersonagem(self, modo="automatico"):
         """É responsável por permitir que o usuário escolha os movimentos e feitiços"""
-
         # personagens disponíveis
         personagens = Personagens().adicionarPersonagens()
-
         for personagem in personagens:
             ConjuntoAcoes().adicionarAcoesPersonagem(personagem)
     
@@ -54,6 +52,10 @@ class Main:
         batalha.looping()
 
     def jogadorVsComputador(self):
-        ...
+        jogador1 = self.escolherPersonagem("manual")
+        jogador2 = self.escolherPersonagem("automatico")
+
+        batalha = Batalha([jogador1, jogador2])
+        batalha.looping()
 
 Main()
