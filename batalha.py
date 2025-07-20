@@ -19,10 +19,6 @@ class Batalha:
             if vencedor != None:
                 print(f"{vencedor.nome} venceu!")
                 break
-            else:
-                for personagem in self.personagens:
-                    personagem.energia += 40
-                    print(f"{personagem.nome} recuperou {40} de energia!")
         limparTela()
 
     def escolherAcoes(self):
@@ -32,23 +28,17 @@ class Batalha:
         for personagem in self.personagens:
             self.acoes.append(personagem.escolherAcao(alvos=self.personagens))
 
+    
+    def fornecerEnergia(self):
+        for personagem in self.personagens:
+            personagem.energia += 40
+            print(f"{personagem.nome} recuperou {40} de energia!")
+
     def executarAcoes(self):
         limparTela()
         exibirTitulo("executando ações")
-        for acao in self.acoes:    
-            if acao.tipo == "expansao":
-                if not acao in self.expansoes:
-                    if acao.ativar():
-                        self.expansoes.append(acao)
-                    else:
-                        print(f"Não é possível ativar {acao.nome}. Energia insuficiente")
-                else:
-                    print(f"a expansão {acao.nome} foi desativada!")
-                    self.expansoes.remove(acao)
-            else:
-                acao.utilizar()
-            exibirLinha()
-        self.acoes.clear()
+        for personagem in self.personagens:
+            personagem.executarAcao()
 
     def analisarStatus(self):
         limparTela()
@@ -65,23 +55,9 @@ class Batalha:
         exibirLinha()
 
     def aplicarEfeitoExpansoes(self):
-        expansoes_desativadas = []
-        for expansao in self.expansoes:
-            try:
-                expansao.definirAlvos(self.personagens)
-                if expansao.podeSerUtilizado():
-                    expansao.executar()
-                else:
-                    print(f"{expansao.nome} está desativada! Energia insuficiente!")
-                    expansoes_desativadas.append(expansao)
-                    
-            except AttributeError as erro: 
-                print(erro)
-                pass
-        # excluindo expansoes desativadas
-        for expansao_desativada in expansoes_desativadas:
-            self.expansoes.remove(expansao_desativada)
-
+        for personagem in self.personagens:
+            personagem.aplicarEfeitosExpansao(alvos_potencial=self.personagens)
+                                        
     def verificarVencedor(self):
         for personagem in self.personagens:
             if personagem.vida <= 0:

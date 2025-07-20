@@ -20,7 +20,7 @@ class Main:
     def escolherPersonagem(self, modo):
         """É responsável por permitir que o usuário escolha os movimentos e feitiços"""
         # personagens disponíveis
-        personagens = Personagens().adicionarPersonagens()
+        personagens = Personagens.adicionarPersonagens()
         for personagem in personagens:
             ConjuntoAcoes().adicionarAcoesPersonagem(personagem)
     

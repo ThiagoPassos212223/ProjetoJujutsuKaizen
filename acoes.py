@@ -36,18 +36,14 @@ class Acao:
     def exibirInformacoes(self):
         dicionario_atributos = self.__dict__.items()
         for chave, valor in dicionario_atributos:
-            if chave == "alvo_usuario" or valor == None or valor == 0 or chave == "funcoes":
-                pass
-            else: 
+            if not(chave == "alvo_usuario" or valor == None or valor == 0 or chave == "funcoes"):
                 print(f"{chave}: {valor}")
 
     def podeSerUtilizado(self):
         if self.fonte == "energia":
             return self.usuario.energia - self.consumo > 0
-        
         elif self.fonte == "pp":
             return self.consumo - 1 >= 0
-        
         else:
             print(f"ocorreu um erro! Fonte inválida para o movimento {self.nome}")
 
@@ -60,15 +56,14 @@ class Acao:
             print(f"ocorreu um erro! Fonte inválida para o movimento {self.nome}")
         
     def utilizar(self):
-        if self.usuario.analisarStatus() and self.usuario.vida > 0:
-            self.consumir()
-            print(f"{self.usuario.nome} utilizou {self.nome}")
-            if (self.usuario.precisao + self.precisao) / 2 >= sortearNumero(1, 100):
-                for funcao in self.funcoes:
-                    funcao.executar(self.alvo)
+        self.consumir()
+        print(f"{self.usuario.nome} utilizou {self.nome}")
+        
+        for funcao in self.funcoes:
+            if not(type(funcao) == Expansao):
+                funcao.executar(self.alvo)
             else:
-                print("Não conseguiu acertar o movimento!")
-
+                funcao.executar()
         exibirLinha()
         self.alvo = None
         self.usuario = None
@@ -144,7 +139,7 @@ class Expansao:
     def utilizar(self):
         self.usuario.energia -= self.consumo
 
-    def ativar(self):
+    def executar(self):
         print(f"{self.usuario.nome} está invocando sua expansão de domínio")
         if self.podeSerUtilizado():
             print(f"{self.nome} está ativa")
@@ -154,23 +149,24 @@ class Expansao:
             
         return self.ativada
     
-    def executar(self):
-        self.utilizar()
-        for alvo in self.alvos:
-            match self.nome:
-                case "santuario":
-                    dano = 25
-                    alvo.vida -= dano
-                    print(f"{alvo.nome} foi atingido pelos cortes do santuario! recebeu {dano} de dano!")
-                case "muriokusho":
-                    if "imobilizado" not in alvo.status:
-                        alvo.status.append(["imobilizado", 1])
-                        print(f"{alvo.nome} foi atingido pelos efeitos do Muriokusho! Está imobilizado!")
-                
-                case _:
-                    print("essa expansão ainda não foi cadastrada, consulte o desenvolvedor para mais informações!")
+    def aplicarEfeitos(self):
+        if self.podeSerUtilizado():
+            self.utilizar()
+            for alvo in self.alvos:
+                match self.nome:
+                    case "santuario":
+                        dano = 25
+                        alvo.vida -= dano
+                        print(f"{alvo.nome} foi atingido pelos cortes do santuario! recebeu {dano} de dano!")
+                    case "muriokusho":
+                        if "imobilizado" not in alvo.status:
+                            alvo.status.append(["imobilizado", 1])
+                            print(f"{alvo.nome} foi atingido pelos efeitos do Muriokusho! Está imobilizado!")
+                    case _:
+                        print("essa expansão ainda não foi cadastrada, consulte o desenvolvedor para mais informações!")
+        else:
+            print("expansão não pode ser utilizada! Energia insuficiente!")
 
-     
     def exibirInformacoes(self):
         dicionario_atributos = self.__dict__.items()
         for chave, valor in dicionario_atributos:
@@ -224,7 +220,7 @@ class ConjuntoAcoes:
         }
         return self.feiticos[nome_personagem]
 
-    def adicionarMovimentos(self, nome_personagem):
+    def adicionarGolpes(self, nome_personagem):
         # golpes gerais
         soco = Acao(nome="soco simples", precisao=100, fonte="pp", consumo=25)
         soco.adicionarFuncoes([Dano(8, precisao=100, acerto_garantido=True)])
@@ -252,7 +248,7 @@ class ConjuntoAcoes:
         return self.expansoes[nome_personagem]
 
     def adicionarAcoesPersonagem(self, personagem):
-        feiticos = self.adicionarFeiticos(personagem.nome)
-        movimentos = self.adicionarMovimentos(personagem.nome)
-        expansao = self.adicionarExpansoes(personagem.nome)
-        personagem.adicionarMovimentos(feiticos, movimentos, expansao)
+        self.feiticos = self.adicionarFeiticos(personagem.nome)
+        self.golpes = self.adicionarGolpes(personagem.nome)
+        self.expansao = self.adicionarExpansoes(personagem.nome)
+        personagem.adicionarMovimentos(feiticos=self.feiticos, golpes=self.golpes, expansao=self.expansao)
