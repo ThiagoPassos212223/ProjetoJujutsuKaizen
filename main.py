@@ -10,9 +10,7 @@ class Main:
         self.jogadores = []
         # looping principal, menu inicial.
         print("bem vindo!")
-        
-        lista_modos_jogo = ["jogador vs jogador", "sair"]
-        modo_jogo =  selecioneOpcao(lista_exibicao=lista_modos_jogo, lista_original=["a", "b"], mensagem="selecione o modo de jogo: ")
+        modo_jogo =  selecioneOpcao(lista_exibicao=["jogador vs jogador", "sair"], lista_original=["a", "b"], mensagem="selecione o modo de jogo: ")
 
         if "a" in modo_jogo:
             self.jogadorVsJogador() # redireciona o jogador para o modo_jogo jogador VS jogador
@@ -27,19 +25,19 @@ class Main:
             ConjuntoAcoes().adicionarAcoesPersonagem(personagem)
     
         limparTela()
-        if modo == "aleatoria":
-            # sorteando um número aleatório para escolher o indíce da lista personagens. 
-            indice_sorteado = sortearNumero(0, len(personagens) - 1)
-            # escolhe o personagem no indice da lista personagens e armazena na variavel personagem 
-            personagem = personagens[indice_sorteado]
+        match modo:
+            case "aleatoria":
+                # sorteando um número aleatório para escolher o indíce da lista personagens. 
+                indice_sorteado = sortearNumero(0, len(personagens) - 1)
+                # escolhe o personagem no indice da lista personagens e armazena na variavel personagem 
+                personagem = personagens[indice_sorteado]
 
-        elif modo == "manual":
-            lista_personagens = []
-            # looping responsável por exibir todos os personagens
-            for personagem in personagens:
-                lista_personagens.append(personagem.nome)
-            personagem = selecioneOpcao(lista_exibicao=lista_personagens, lista_original=personagens, mensagem="selecione um personagem: ")
-            
+            case "manual":
+                lista_personagens = []
+                # looping responsável por exibir todos os personagens
+                for personagem in personagens:
+                    lista_personagens.append(personagem.nome)
+                personagem = selecioneOpcao(lista_exibicao=lista_personagens, lista_original=personagens, mensagem="selecione um personagem: ")
         return personagem
                   
     def jogadorVsJogador(self):

@@ -28,6 +28,7 @@ class Batalha:
     def escolherAcoes(self):
         # organizando os personagens por velocidade, aqueles mais rapidos escolhem primeiro sua ação e as executam primeiro.
         self.personagens.sort(key=lambda p: p.agilidade, reverse=True)
+
         for personagem in self.personagens:
             self.acoes.append(personagem.escolherAcao(alvos=self.personagens))
 

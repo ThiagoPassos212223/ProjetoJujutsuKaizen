@@ -1,16 +1,16 @@
-from utilidades import limparTela, exibirLinha, sortearNumero
+from utilidades import limparTela, exibirLinha, sortearNumero, selecioneOpcao
 
-# Molda outras classes, facilitando a utilização de funções em comum. 
+# Responsável por moldar uma ação. 
 class Acao:
-    def __init__(self, nome, fonte, consumo, precisao, alvo_usuario=False):
+    def __init__(self, nome, fonte, consumo, acerto_garantido=False, precisao=100, alvo_usuario=False):
         self.nome = nome
         self.tipo = "acao"
         self.fonte = fonte
         self.consumo = consumo
+        self.acerto_garantido = acerto_garantido
         self.precisao = precisao
         self.alvo_usuario = alvo_usuario
-        self.funcoes = None
-    
+
     def adicionarFuncoes(self, funcoes):
         self.funcoes = funcoes
 
@@ -18,59 +18,38 @@ class Acao:
         self.usuario = usuario
 
     def definirAlvo(self, lista_alvos):
-        # limpando a tela
         limparTela(esperar=False)
-        
-        alvos = lista_alvos.copy()
-        # remove o usuário da lista de alvos possíveis
+        # cria uma cópia de uma lista! Isso é importante pois caso não fosse feito, a lista original seria afetada. Quando
+        # uma lista é passada como parâmetro, o que está sendo passado é seu endereço da memória. Quando se utiliza o método .copy()
+        # uma nova lista com um novo endereço na memória é criada, contendo os dados da lista original.
+        alvos = lista_alvos.copy() 
         if self.alvo_usuario:
             self.alvo = self.usuario
-            return None
         else:
             alvos.remove(self.usuario)
             if len(alvos) == 1:
                 self.alvo = alvos[0]
-                return None
             else:
-                for indice, alvo in enumerate(alvos):
-                    print(f"{indice}){alvo.nome}")
-                try:
-                    indice_alvo = int(input("selecione o alvo da sua ação: "))
-                    self.alvo = alvos[indice_alvo]
-                    return None     
-                except ValueError:
-                    print(f"ERRO: o tipo esperado é um valor númerico inteiro positivo! Tente novamente!")
-                except IndexError:
-                    print("ERRO: opção inválida! Selecione uma das opções disponíveis!")
-
-        # repete a função caso ocorra algum erro. A função só encerra o looping caso o usuário tenha selecionado um alvo válido.
-        return self.definirAlvo(lista_alvos)
+                nome_alvos = [n.nome for n in alvos]
+                self.alvo = selecioneOpcao(lista_exibicao=nome_alvos, lista_original=alvos, mensagem="selecione um alvo:")
     
     def exibirInformacoes(self):
         dicionario_atributos = self.__dict__.items()
         for chave, valor in dicionario_atributos:
-            if chave == "alvo_usuario" or valor == None or valor == 0:
-                pass
-            elif chave == "funcoes":
+            if chave == "alvo_usuario" or valor == None or valor == 0 or chave == "funcoes":
                 pass
             else: 
                 print(f"{chave}: {valor}")
 
     def podeSerUtilizado(self):
         if self.fonte == "energia":
-            # reduz a energia do usuário do feitiço
-            if self.usuario.energia - self.consumo > 0:
-                return True
-            else:
-                return False
+            return self.usuario.energia - self.consumo > 0
+        
         elif self.fonte == "pp":
-            if self.consumo - 1 >= 0:
-                return True
-            else:
-                return False
+            return self.consumo - 1 >= 0
+        
         else:
             print(f"ocorreu um erro! Fonte inválida para o movimento {self.nome}")
-            input("pressione enter para continuar: ")
 
     def consumir(self):
         if self.fonte == "energia":
@@ -93,7 +72,7 @@ class Acao:
         exibirLinha()
         self.alvo = None
         self.usuario = None
-    
+
 class Dano:
     def __init__(self, dano, precisao=100, acerto_garantido=False):
         self.dano = dano
@@ -144,7 +123,7 @@ class Efeito:
                     alvo.status.append([self.status, duracao_efeito])
             else:
                 print("não é possível aplicar efeito, pois o mugen está ativado!")
-            
+
 class Expansao:
     def __init__(self, nome, consumo):
         self.tipo = "expansao"
@@ -160,10 +139,7 @@ class Expansao:
         self.alvos.remove(self.usuario)
 
     def podeSerUtilizado(self):
-        if self.usuario.energia - self.consumo >= 0:
-            return True
-        else: 
-            return False
+        return self.usuario.energia - self.consumo >= 0
     
     def utilizar(self):
         self.usuario.energia -= self.consumo
@@ -279,5 +255,4 @@ class ConjuntoAcoes:
         feiticos = self.adicionarFeiticos(personagem.nome)
         movimentos = self.adicionarMovimentos(personagem.nome)
         expansao = self.adicionarExpansoes(personagem.nome)
-
-        personagem.adicionarAcoes(feiticos, movimentos, expansao)
+        personagem.adicionarMovimentos(feiticos, movimentos, expansao)

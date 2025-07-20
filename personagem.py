@@ -3,26 +3,26 @@ from utilidades import limparTela, exibirLinha, selecioneOpcao
 # classe responsável por modelar os feiticeiros e maldições
 class Personagem:
     """classe responsável por modelar os personagens, definindo seus atributos e comportamentos como analisarStatus, escolherAcao. """
-    def __init__(self, nome, vida, agilidade, energia, energia_reversa=False):
+    def __init__(self, nome, vida, agilidade, energia):
         # atributos básicos
         self.nome = nome
         self.vida = vida
         self.agilidade = agilidade
-        self.evasao = 10
         self.energia = energia
-        self.energia_reversa = energia_reversa
         # atributos padrão (todos os personagens possuem o mesmo valor)
         self.precisao = 100
         self.status = []
-        self.expansao_ativada = False
+
+        self.acao = None
     
-    def adicionarAcoes(self, feiticos, movimentos, expansao):
+    def adicionarMovimentos(self, feiticos, golpes, expansao=None, energia_reversa=False):
         self.feiticos = feiticos
-        self.movimentos = movimentos
+        self.golpes = golpes
         self.expansao = expansao
+        self.regeneracao = energia_reversa
 
     def analisarStatus(self):
-        joga = True
+        self.joga = True
         print(f"status: ({self.nome})")
         # self.status é uma lista que possuí todos os status que o jogador possuí, os status são analisados nesse looping 
         for status in self.status:
@@ -38,10 +38,10 @@ class Personagem:
                     self.vida -= self.vida * 0.1
                 case "imobilizado":
                     print(f"{self.nome} está imobilizado! Não é possível realizar sua ação.") 
-                    joga = False
+                    self.joga = False
                 case "atordoado":
                     print(f"{self.nome} está atordoado! Não poderá realizar sua ação.")
-                    joga = False
+                    self.joga = False
                 case "mugen ativado":
                     print(f"{self.nome} está com mugen ativado!")
                 case "regeneração":
@@ -55,10 +55,11 @@ class Personagem:
             # verifica se a duração do efeito de status acabou, caso tenha, remove da lista de efeito de status
             if duracao - 1 == 0:
                 self.status.remove(status)
-            else: 
+            else:
                 status[1] -= 1
+
         exibirLinha()
-        return joga
+        return self.joga
     
     def escolherAcao(self, alvos):
         """responsável por permitir a escolha das ações do personagem"""
@@ -66,8 +67,8 @@ class Personagem:
         while True:
             print(f"seleção de movimentos: ({self.nome})")
             print(f"vida: {self.vida}   energia: {self.energia}")
-
-            dicionario_opcoes = [self.movimentos, self.feiticos]            
+            dicionario_opcoes = [self.golpes, self.feiticos]
+            
             # caso o personagem possua expansão, ela será exibida, caso contrário, não
             if self.expansao != None:
                 dicionario_opcoes.append(self.expansao)
@@ -85,10 +86,8 @@ class Personagem:
                         return self.escolherAcao(alvos)
                 else:
                     acao_escolhida = acoes[0]
-
             else:
                 acao_escolhida = acoes
-
             # exibe informações sobre o movimento, feitiço ou expansão escolhida
             exibirLinha()
             print("informações adicionais")
@@ -96,24 +95,22 @@ class Personagem:
 
             escolha = selecioneOpcao(lista_exibicao=["confirmar escolha", "cancelar"], lista_original=[True, False], mensagem="selecione uma das opções: ", escolha_obrigatoria=True)
             if escolha:
+                acao_escolhida.definirUsuario(self)
+
                 if acao_escolhida.tipo == "acao":
-                    if not(acao_escolhida.alvo_usuario):
-                        acao_escolhida.definirUsuario(self)
-                        acao_escolhida.definirAlvo(alvos)
-                    else:
-                        acao_escolhida.definirUsuario(self)
-                        acao_escolhida.definirAlvo(alvos)
-                else:
-                    acao_escolhida.definirUsuario(self)
-
+                    acao_escolhida.definirAlvo(alvos)
+                
                 pode_utilizar = acao_escolhida.podeSerUtilizado()
-
                 if pode_utilizar:
                     return acao_escolhida
                 else:
                     return self.escolherAcao(alvos)
             else:
                 return self.escolherAcao(alvos)
+    
+    def executarAcao(self):
+        
+        ...
 
 class Personagens:
     def __init__(self):
@@ -121,9 +118,9 @@ class Personagens:
         
     def adicionarPersonagens(self):
         personagens = []
-        personagens.append(Personagem(nome="Satoru Gojo", vida=100, agilidade=100, energia=100, energia_reversa=True))
-        personagens.append(Personagem(nome="Ryomen Sukuna", vida=100, agilidade=90, energia=400, energia_reversa=True))
-        personagens.append(Personagem(nome="Yuta Okkotsu", vida=100, agilidade=50, energia=200, energia_reversa=True))
+        personagens.append(Personagem(nome="Satoru Gojo", vida=100, agilidade=100, energia=100))
+        personagens.append(Personagem(nome="Ryomen Sukuna", vida=100, agilidade=90, energia=400))
+        personagens.append(Personagem(nome="Yuta Okkotsu", vida=100, agilidade=50, energia=200))
         
         return personagens
     
