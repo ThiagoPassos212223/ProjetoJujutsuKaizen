@@ -30,8 +30,9 @@ class Acao:
             if len(alvos) == 1:
                 self.alvo = alvos[0]
             else:
-                nome_alvos = [n.nome for n in alvos]
-                self.alvo = selecioneOpcao(lista_exibicao=nome_alvos, lista_original=alvos, mensagem="selecione um alvo:")
+                nome_alvos = [alvo.nome for alvo in alvos]
+                indice_escolhido = selecioneOpcao(lista_original=nome_alvos, mensagem="selecione um alvo:")
+                self.alvo = alvos[indice_escolhido]
     
     def exibirInformacoes(self):
         dicionario_atributos = self.__dict__.items()

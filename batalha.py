@@ -4,7 +4,6 @@ from utilidades import limparTela, exibirLinha, exibirTitulo
 class Batalha:
     def __init__(self, personagens):
         self.personagens = personagens
-        self.acoes = []
         self.efeitos = []
         self.expansoes = []
 
@@ -16,7 +15,7 @@ class Batalha:
             self.exibirInformacoes()
 
             vencedor = self.verificarVencedor()
-            if vencedor != None:
+            if vencedor:
                 print(f"{vencedor.nome} venceu!")
                 break
         limparTela()
@@ -26,8 +25,7 @@ class Batalha:
         self.personagens.sort(key=lambda p: p.agilidade, reverse=True)
 
         for personagem in self.personagens:
-            self.acoes.append(personagem.escolherAcao(alvos=self.personagens))
-
+            personagem.escolherAcao(alvos=self.personagens)
     
     def fornecerEnergia(self):
         for personagem in self.personagens:

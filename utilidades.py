@@ -21,18 +21,20 @@ def exibirTitulo(titulo):
     print(" " * posicao_inicial, titulo)
     exibirLinha()
 
-def selecioneOpcao(lista_exibicao, lista_original, mensagem="selecione uma das opções:", escolha_obrigatoria=True):
+def selecioneOpcao(lista_original, mensagem="selecione uma das opções:", escolha_obrigatoria=True):
     while True:
-        for indice, opcao in enumerate(lista_exibicao):
-            print(f"{indice}){opcao}")    
+        for indice, opcao in enumerate(lista_original):
+            print(f"{indice}){opcao}")
+        
         try:
             escolha = int(input(mensagem))
-            return lista_original[escolha]
+            if escolha >= 0 and escolha < len(lista_original):
+                return escolha
+            else:
+                print("Erro: Selecione uma opção válida!")
+
         except ValueError:
-            print("Erro: o tipo esperado é um valor númerico inteiro positivo!")
-        except IndexError:
-            print("Erro: opção inválida, selecione uma das opções disponíveis!")
+            print("Erro: Selecione uma opção válida!")
         
         if not(escolha_obrigatoria):
             return None
-            

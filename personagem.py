@@ -52,11 +52,10 @@ class Personagem:
                 case _:
                     print(f"ERRO! Um status não cadastrado foi detectado! {efeito_status}")
             # verifica se a duração do efeito de status acabou, caso tenha, remove da lista de efeito de status
-            if duracao - 1 == 0:
+            status[1] -= 1
+            if duracao == 0:
                 self.status.remove(status)
-            else:
-                status[1] -= 1
-
+            
         exibirLinha()
         return self.joga
     
@@ -64,56 +63,64 @@ class Personagem:
         """responsável por permitir a escolha das ações do personagem"""
         while True:
             limparTela()
-
             print(f"seleção de movimentos: ({self.nome})")
             print(f"vida: {self.vida}   energia: {self.energia}")
 
-            lista_opcoes = ["movimentos", "feitiços"]
-            dicionario_opcoes = [self.golpes, self.feiticos]
-            
+            lista_opcoes = ["golpes", "feitiços"]
             # caso o personagem possua expansão, ela será exibida, caso contrário, não
-            if self.expansao != None:
-                dicionario_opcoes.append(self.expansao)
+            if self.expansao:
                 lista_opcoes.append("expansao")
 
             # verifica a seleção do usuário e com isso, carrega a lista de opções correta. 
-            acoes = selecioneOpcao(lista_exibicao=lista_opcoes, lista_original=dicionario_opcoes, mensagem="selecione sua ação: ")
-
-            if type(acoes) == list:
-                if len(acoes) > 1:
-                    lista_amostra = []
-                    for acao in acoes:
-                        lista_amostra.append(acao.nome) 
-                    acao_escolhida = selecioneOpcao(lista_exibicao=lista_amostra, lista_original=acoes, mensagem="selecione um movimento: ", escolha_obrigatoria=False) 
-                else:
-                    acao_escolhida = acoes[0]
-            else:
-                acao_escolhida = acoes
-
+            indice_escolhido = selecioneOpcao(lista_original=lista_opcoes, mensagem="selecione sua ação: ")
+            acao = lista_opcoes[indice_escolhido]
             
+            match acao:
+                case "golpes":
+                    acao = self.golpes
+                case "feitiços":
+                    acao = self.feiticos
+                case "expansao":
+                    acao = self.expansao
+                case _:
+                    acao = None
+
+            if type(acao) == list:
+                if len(acao) > 1:
+                    lista_amostra = [acao.nome for acao in acao] 
+                    indice_escolhido = selecioneOpcao(lista_original=lista_amostra, mensagem="selecione um movimento: ", escolha_obrigatoria=False)  
+                else:
+                    indice_escolhido = 0
+                acao_escolhida = acao[indice_escolhido]
+
+            else:
+                acao_escolhida = acao
+
             if acao_escolhida:
                 # exibe informações sobre o movimento, feitiço ou expansão escolhida
                 exibirLinha()
                 print("informações adicionais")
                 acao_escolhida.exibirInformacoes()
-
-                escolha = selecioneOpcao(lista_exibicao=["confirmar escolha", "cancelar"], lista_original=[True, False], mensagem="selecione uma das opções: ", escolha_obrigatoria=True)
-                if escolha:
-                    acao_escolhida.definirUsuario(self)
-
-                    if acao_escolhida.tipo == "acao":
-                        acao_escolhida.definirAlvo(alvos)
-                    
+                indice_escolhido = selecioneOpcao(lista_original=["confirmar escolha", "cancelar"], mensagem="selecione uma das opções: ", escolha_obrigatoria=True)
+                match indice_escolhido:
+                    case 0:
+                        acao_escolhida.definirUsuario(self)
+                        if acao_escolhida.tipo == "acao":
+                            acao_escolhida.definirAlvo(alvos) 
+                    case _:
+                        acao_escolhida = None 
+                
+                if acao_escolhida:
                     pode_utilizar = acao_escolhida.podeSerUtilizado()
                     if pode_utilizar:
                         self.acao = acao_escolhida
-                        break
+                        return None
             else:
                 print("nenhuma opção foi selecionada!")
         
     def executarAcao(self):
         print(f"{self.nome} (Ação)")
-        if self.acao != None:
+        if self.acao:
             if self.analisarStatus() and self.vida > 0:
                 if self.acao.tipo == "acao":
                     self.acao.utilizar()
@@ -123,7 +130,7 @@ class Personagem:
             print("nenhuma ação foi selecionada!")
         
     def aplicarEfeitosExpansao(self, alvos_potencial):
-        if self.expansao != None and self.expansao.ativada:
+        if self.expansao and self.expansao.ativada:
             if self.vida > 20:
                 self.expansao.definirAlvos(alvos_potencial)
                 if self.expansao.podeSerUtilizado():

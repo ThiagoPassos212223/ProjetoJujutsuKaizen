@@ -10,17 +10,19 @@ class Main:
         self.jogadores = []
         # looping principal, menu inicial.
         print("bem vindo!")
-        modo_jogo =  selecioneOpcao(lista_exibicao=["jogador vs jogador", "sair"], lista_original=["a", "b"], mensagem="selecione o modo de jogo: ")
+        modo_jogo =  selecioneOpcao(lista_original=["jogador vs jogador", "sair"], mensagem="selecione o modo de jogo: ")
 
-        if "a" in modo_jogo:
-            self.jogadorVsJogador() # redireciona o jogador para o modo_jogo jogador VS jogador
-        else:
-            exit() # fecha o programa
+        match modo_jogo:
+            case 0:
+                self.jogadorVsJogador() # redireciona o jogador para o modo_jogo jogador VS jogador
+            case _:
+                exit() # fecha o programa
 
     def escolherPersonagem(self, modo):
         """É responsável por permitir que o usuário escolha os movimentos e feitiços"""
         # personagens disponíveis
         personagens = Personagens.adicionarPersonagens()
+
         for personagem in personagens:
             ConjuntoAcoes().adicionarAcoesPersonagem(personagem)
     
@@ -28,24 +30,22 @@ class Main:
         match modo:
             case "aleatoria":
                 # sorteando um número aleatório para escolher o indíce da lista personagens. 
-                indice_sorteado = sortearNumero(0, len(personagens) - 1)
-                # escolhe o personagem no indice da lista personagens e armazena na variavel personagem 
-                personagem = personagens[indice_sorteado]
-
+                indice_escolhido = sortearNumero(0, len(personagens) - 1)
             case "manual":
-                lista_personagens = []
                 # looping responsável por exibir todos os personagens
-                for personagem in personagens:
-                    lista_personagens.append(personagem.nome)
-                personagem = selecioneOpcao(lista_exibicao=lista_personagens, lista_original=personagens, mensagem="selecione um personagem: ")
-        return personagem
+                lista_personagens = [personagem.nome for personagem in personagens]
+                indice_escolhido = selecioneOpcao(lista_original=lista_personagens, mensagem="selecione um personagem: ") 
+
+        return personagens[indice_escolhido]
                   
     def jogadorVsJogador(self):
         for n in range(1, self.numero_jogadores + 1):
             print(f"player {n} vai escolher o personagem: ")
             opcoes = ["manual", "aleatoria"]
-            modo = selecioneOpcao(lista_exibicao=opcoes, lista_original=opcoes, mensagem="selecione o modo de escolha: ", escolha_obrigatoria=True)
-            self.jogadores.append(self.escolherPersonagem(modo))
+            indice_escolhido = selecioneOpcao(lista_original=opcoes, mensagem="selecione o modo de escolha: ", escolha_obrigatoria=True)
+            opcao = opcoes[indice_escolhido]
+
+            self.jogadores.append(self.escolherPersonagem(opcao))
 
         batalha = Batalha(self.jogadores)
         batalha.looping()
